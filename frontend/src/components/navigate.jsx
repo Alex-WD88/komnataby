@@ -12,7 +12,7 @@ const Navigate = () => {
   <>
     <nav className="navbar navbar-expand-lg bg-body-tertiary">
       <div className="container-fluid">
-        <a className="navbar-brand" href="#">Navbar</a>
+        <a className="navbar-brand" href="/">Komnata.by</a>
         <button className="navbar-toggler" 
                 type="button" 
                 data-bs-toggle="collapse" 
@@ -24,11 +24,10 @@ const Navigate = () => {
         </button>
       <div className="collapse navbar-collapse" id="navbarTogglerDemo02">
         <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-          {isAuth ? <Link to="/" className='nav-link active'>Home</Link> : null}
+          <Link to="/" className='nav-link active'>Home</Link>
           {isAuth ? <Link to="/logout" className='nav-link active'>Logout</Link> :
                     <Link to="/login" className='nav-link active'>Login</Link>}
-          {isAuth ? '' :
-                    <Link to="/register" className='nav-link active'> Register</Link>}
+          {isAuth ? null : <Link to="/register" className='nav-link active'> Register</Link>}
         </ul>
       </div>
       </div>

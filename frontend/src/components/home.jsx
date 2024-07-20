@@ -6,10 +6,6 @@ const Home = () => {
 
   useEffect(() => {
     const accessToken = localStorage.getItem('access_token');
-    if (!accessToken) {
-      // Если токена нет, перенаправляем на страницу входа
-      window.location.href = '/login';
-    } else {
       (async () => {
         try {
           const config = {
@@ -29,13 +25,12 @@ const Home = () => {
           console.log('not auth');
         }
       })();
-    }
   }, []);
 
   return (
     <>
       <div className="form-signin mt-5 text-center">
-        <h3>Hi {message}</h3>
+        {message ? <h3>Hi {message}</h3> : null}
       </div>
     </>
   );
