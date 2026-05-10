@@ -1,68 +1,51 @@
-import React,{useState} from 'react'
-import axios from 'axios'
-// Define the Login function.
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "./axios";
+
 const Register = () => {
-  const [username,setUsername] = useState('');
-  const [password,setPassword] = useState('');
-// Create the submit method.
-  const submit = async e =>{
-    e.preventDefault()
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-    const user = {
-      username:username,
-      password:password
-    };
-// Create the POST requuest
-
-
-    await fetch('http://localhost:8000/register/',{
-      method:'POST',
-      headers:{'Content-Type':"application/json"},
-      body: JSON.stringify(
-        {
-          username,
-          password
-        }
-      )
-    });
-    window.location.href='/login'
-  
-  }
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    try {
+      await api.post("/register/", { username, password });
+      navigate("/login");
+    } catch (err) {
+      setError(err.response?.data?.error?.message || "Registration failed. Try another username.");
+    }
+  };
 
   return (
-    <>
-      <div className="Auth-form-container">
-      <form className="Auth-form" onSubmit={submit}>
-        <div className="Auth-form-content">
-          <h3 className="Auth-form-title">Register</h3>
-          <div className="form-group mt-3">
-            <label>Username</label>
-            <input className="form-control mt-1" 
-              placeholder="Enter Username" 
-              name='username'  
-              type='text' value={username}
-              required 
-              onChange={e => setUsername(e.target.value)}/>
-          </div>
-          <div className="form-group mt-3">
-            <label>Password</label>
-            <input name='password' 
-              type="password"     
-              className="form-control mt-1"
-              placeholder="Enter password"
-              value={password}
-              required
-              onChange={e => setPassword(e.target.value)}/>
-          </div>
-          <div className="d-grid gap-2 mt-3">
-            <button type="submit" 
-                className="btn btn-primary">Submit</button>
-          </div>
-        </div>
+    <section className="page auth-page">
+      <h2>Create account</h2>
+      <form className="auth-form" onSubmit={submit}>
+        <label htmlFor="username">Username</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          value={username}
+          required
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <label htmlFor="password">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          value={password}
+          required
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {error ? <p className="error">{error}</p> : null}
+        <button type="submit">Register</button>
       </form>
-    </div>
-  </>
-  )
-}
+    </section>
+  );
+};
 
-export default Register
+export default Register;

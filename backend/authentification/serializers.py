@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from .models import Listing, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -19,3 +19,21 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
+
+
+class ListingSerializer(serializers.ModelSerializer):
+    created_by = serializers.CharField(source="created_by.username", read_only=True)
+    created_by_id = serializers.IntegerField(source="created_by.id", read_only=True)
+
+    class Meta:
+        model = Listing
+        fields = [
+            "id",
+            "title",
+            "description",
+            "price",
+            "city",
+            "created_by",
+            "created_by_id",
+            "created_at",
+        ]

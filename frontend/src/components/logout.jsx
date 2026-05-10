@@ -1,31 +1,28 @@
-import { useEffect } from 'react';
-import axios from 'axios';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "./axios";
 
 const Logout = () => {
+  const navigate = useNavigate();
+
   useEffect(() => {
     (async () => {
       try {
-        const config = {
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          withCredentials: true
-        };
-        const response = await axios.post('http://localhost:8000/token/refresh/',{
-          refresh:localStorage.getItem('refresh_token')
-        }, config);
-
-        localStorage.clear();
-        axios.defaults.headers.common['Authorization'] = null;
-        window.location.href = '/login'
-
-      }
-      catch (e) {
-        console.log('logout not work', e);
+        const refreshToken = localStorage.getItem("refresh_token");
+        if (refreshToken) {
+          await api.post("/logout/", { refresh_token: refreshToken });
+        }
+      } catch {
+        // Ignore logout API errors; local logout is still required.
+      } finally {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        navigate("/login");
       }
     })();
-  }, []);
-  return (<div></div>)
-}
+  }, [navigate]);
+
+  return <section className="page">Signing out...</section>;
+};
 
 export default Logout;

@@ -1,39 +1,44 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import api from "./axios";
 
 const Home = () => {
-  const [message, setMessage] = useState('');
+  const [health, setHealth] = useState("loading");
+  const [message, setMessage] = useState("");
+  const [isLoadingHome, setIsLoadingHome] = useState(false);
+  const [homeError, setHomeError] = useState("");
 
   useEffect(() => {
-    const accessToken = localStorage.getItem('access_token');
-      (async () => {
-        try {
-          const config = {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${accessToken}` // Важно использовать Bearer токен
-            },
-            withCredentials: true,
-          };
-          // Добавляем токен авторизации в заголовки запроса
-          const {data} = await axios.get(
-            'http://localhost:8000/home/',
-            config
-          );
-          setMessage(data.message);
-        } catch (error) {
-          console.log('not auth');
-        }
-      })();
+    (async () => {
+      try {
+        await api.get("/health/");
+        setHealth("online");
+      } catch {
+        setHealth("offline");
+      }
+
+      setIsLoadingHome(true);
+      setHomeError("");
+      try {
+        const { data } = await api.get("/home/");
+        setMessage(data?.data?.message || "");
+      } catch (err) {
+        setMessage("");
+        setHomeError(err.response?.data?.error?.message || "Login to access protected API data.");
+      } finally {
+        setIsLoadingHome(false);
+      }
+    })();
   }, []);
 
   return (
-    <>
-      <div className="form-signin mt-5 text-center">
-        {message ? <h3>Hi {message}</h3> : null}
-      </div>
-    </>
+    <section className="page">
+      <h1>Project wrapper is ready</h1>
+      <p className="muted">Backend status: {health}</p>
+      {isLoadingHome ? <p className="muted">Loading protected data...</p> : null}
+      {!isLoadingHome && message ? <p>{message}</p> : null}
+      {!isLoadingHome && !message ? <p className="muted">{homeError || "No data."}</p> : null}
+    </section>
   );
-}
+};
 
 export default Home;
