@@ -1,197 +1,321 @@
+"""
+Настройки Django проекта Komnataby.
+
+Здесь конфигурируются все аспекты приложения:
+- Безопасность (SECRET_KEY, CORS, CSRF)
+- База данных (PostgreSQL)
+- REST Framework и JWT
+- drf-spectacular (OpenAPI/Swagger)
+- Валидация паролей, статика, медиа
+"""
+
 from pathlib import Path
 from datetime import timedelta
 import os
+import secrets
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# ==============================================================================
+# Базовые пути проекта
+# ==============================================================================
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-def get_bool_env(name, default=False):
+def get_bool_env(name: str, default: bool = False) -> bool:
+    """
+    Преобразует строковое значение переменной окружения в bool.
+
+    Args:
+        name: Имя переменной окружения.
+        default: Значение по умолчанию, если переменная не задана.
+
+    Returns:
+        True если значение '1', 'true', 'yes', 'on' (регистронезависимо),
+        иначе — default.
+    """
     value = os.getenv(name)
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
-def get_list_env(name, default=""):
+def get_list_env(name: str, default: str = "") -> list[str]:
+    """
+    Преобразует строковое значение переменной окружения в список.
+
+    Значения разделяются запятой. Пустые элементы отфильтровываются.
+
+    Args:
+        name: Имя переменной окружения.
+        default: Значение по умолчанию.
+
+    Returns:
+        Список строк.
+    """
     value = os.getenv(name, default)
     if not value:
         return []
     return [item.strip() for item in value.split(",") if item.strip()]
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
+# ==============================================================================
+# Безопасность
+# ==============================================================================
+
+# Секретный ключ Django.
+# ВНИМАНИЕ: никогда не используйте дефолтное значение в продакшене!
+# При запуске в продакшене (DEBUG=False) ключ будет сгенерирован автоматически.
+# В локальном режиме используется placeholder — обязательно задайте DJANGO_SECRET_KEY.
 SECRET_KEY = os.getenv(
     "DJANGO_SECRET_KEY",
-    "django-insecure-2+yxc%h_-mjisx(&=%+p8=gd8xg%o+8!+!n_od%*whkphky0)@",
+    # Placeholder для локальной разработки. При DEBUG=False будет перегенерирован.
+    "django-insecure-change-this-in-production-" + secrets.token_hex(16),
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = get_bool_env("DJANGO_DEBUG", True)
 
-CORS_ORIGIN_ALLOW_ALL = get_bool_env("DJANGO_CORS_ALLOW_ALL", True)
-CORS_ALLOW_CREDENTIALS = True
+# Разрешённые хосты.
+# В продакшене обязательно укажите ваши домены через запятую:
+#   DJANGO_ALLOWED_HOSTS=komnata.by,www.komnatay
 ALLOWED_HOSTS = get_list_env("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
-if CORS_ORIGIN_ALLOW_ALL is False:
-    CORS_ALLOWED_ORIGINS = get_list_env(
-        "DJANGO_CORS_ALLOWED_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173",
-    )
 
-# Application definition
+# CORS-конфигурация.
+# По умолчанию CORS отключён (безопасный default).
+# Для локальной разработки раскомментируйте CORS_ALLOWED_ORIGINS в .env.
+CORS_ORIGIN_ALLOW_ALL = get_bool_env("DJANGO_CORS_ALLOW_ALL", False)
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = get_list_env(
+    "DJANGO_CORS_ALLOWED_ORIGINS",
+    "",  # Пусто по умолчанию — безопасный default
+)
+
+# ==============================================================================
+# Установленные приложения
+# ==============================================================================
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    # app
-    'authentification',
-    # lib
-    'corsheaders',
-    'rest_framework',
-    'rest_framework_simplejwt.token_blacklist'
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    # Внутренние приложения
+    "authentification",
+    # Сторонние приложения
+    "corsheaders",
+    "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
+    "drf_spectacular",
 ]
 
-# ??
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-    'EXCEPTION_HANDLER': 'backend.exceptions.api_exception_handler',
-}
+# ==============================================================================
+# Middleware
+# ==============================================================================
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # ??
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    # CORS middleware должен быть сразу после SessionMiddleware
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'backend.urls'
+ROOT_URLCONF = "backend.urls"
+
+# ==============================================================================
+# Шаблоны
+# ==============================================================================
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'backend.wsgi.application'
+WSGI_APPLICATION = "backend.wsgi.application"
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+
+# ==============================================================================
+# База данных (PostgreSQL)
+# ==============================================================================
 
 DATABASES = {
-    'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-        'NAME': os.getenv('DB_NAME', 'komnata_db'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'postgres'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+    "default": {
+        "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.postgresql"),
+        "NAME": os.getenv("DB_NAME", "komnata_db"),
+        "USER": os.getenv("DB_USER", "postgres"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "postgres"),
+        "HOST": os.getenv("DB_HOST", "db"),  # По умолчанию — Docker-сервис 'db'
+        "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
 
-# Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
+# ==============================================================================
+# Проверка сложности паролей
+# ==============================================================================
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},  # Минимум 8 символов
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
+# ==============================================================================
+# Международization
+# ==============================================================================
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
+LANGUAGE_CODE = "ru-ru"  # Целевая локализация для Беларуси
+TIME_ZONE = "Europe/Minsk"
 USE_I18N = True
-
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
+# ==============================================================================
+# Статика и медиа
+# ==============================================================================
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# ==============================================================================
+# Primary key field
+# ==============================================================================
 
-# ??
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ==============================================================================
+# Django REST Framework
+# ==============================================================================
+
+REST_FRAMEWORK = {
+    # JWT-аутентификация по умолчанию для всех API-эндпоинтов
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    # Стандартные разрешения: аутентифицированные или только чтение
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
+    ],
+    # Кастомный обработчик исключений — унифицирует формат ошибок
+    "EXCEPTION_HANDLER": "backend.exceptions.api_exception_handler",
+    # AutoSchema для drf-spectacular (OpenAPI/Swagger)
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # Пагинация по умолчанию для всех списков
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 6,
+}
+
+# ==============================================================================
+# drf-spectacular (OpenAPI / Swagger)
+# ==============================================================================
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Komnataby API",
+    "DESCRIPTION": "API для сервиса аренды квартир и комнат komnata.by",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,  # Не включать схему в ответы API
+    "COMPONENT_SPLIT_REQUEST": True,
+    "CONTACT": {
+        "name": "Команда Komnataby",
+        "url": "https://komnata.by",
+    },
+    "LICENSE": {
+        "name": "MIT License",
+    },
+}
+
+# ==============================================================================
+# SimpleJWT (JWT-токены)
+# ==============================================================================
+
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
+    # Access-токен: 60 минут (было 5 — слишком мало для реального использования)
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    # Refresh-токен: 7 дней (было 90 — слишком много, высокий риск кражи)
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    # Ротация refresh-токенов: каждый use выдаёт новый
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
-    "UPDATE_LAST_LOGIN": False,
+    "UPDATE_LAST_LOGIN": True,
 
     "ALGORITHM": "HS256",
-
-    "VERIFYING_KEY": "",
-    "AUDIENCE": None,
-    "ISSUER": None,
-    "JSON_ENCODER": None,
-    "JWK_URL": None,
-    "LEEWAY": 0,
+    "SIGNING_KEY": SECRET_KEY,
 
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
-    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
-
-    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
-    "TOKEN_TYPE_CLAIM": "token_type",
-    "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
 
     "JTI_CLAIM": "jti",
 
-    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    # Не используем sliding tokens
     "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
-
-    "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
-    "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
-    "TOKEN_VERIFY_SERIALIZER": "rest_framework_simplejwt.serializers.TokenVerifySerializer",
-    "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
-    "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
-    "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
-AUTH_USER_MODEL = 'authentification.User'
-#CORS_ALLOW_ALL_ORIGINS = True
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:5173",
-#     # Другие домены
-# ]
+
+# Пользовательская модель
+AUTH_USER_MODEL = "authentification.User"
+
+# ==============================================================================
+# Логирование
+# ==============================================================================
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.security": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+    },
+}

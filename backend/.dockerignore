@@ -1,0 +1,30 @@
+# Исключаем не нужное из Docker-образа бэкенда
+
+# Виртуальное окружение
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Локальные файлы
+.env
+*.log
+
+# Git
+.git/
+.gitignore
+
+# Media и static (генерируются при запуске)
+media/
+staticfiles/

@@ -1,9 +1,9 @@
 """
-WSGI config for backend project.
+WSGI-конфигурация для проекта backend.
 
-It exposes the WSGI callable as a module-level variable named ``application``.
+Экспортирует переменную ``application`` — вызываемый объект WSGI-сервера.
 
-For more information on this file, see
+Для подробностей:
 https://docs.djangoproject.com/en/4.2/howto/deployment/wsgi/
 """
 
@@ -11,6 +11,7 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+# Указываем модуль настроек Django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
 
 application = get_wsgi_application()

@@ -1,0 +1,28 @@
+# Исключаем не нужное из Docker-образа фронтенда
+
+# Локальные зависимости
+node_modules/
+
+# Локальные файлы
+.env
+.env.local
+*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Dist (собирается в Docker)
+dist/
+build/

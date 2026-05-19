@@ -1,0 +1,39 @@
+# Исключаем не нужное из корня репозитория
+
+# Виртуальные окружения
+.venv/
+venv/
+env/
+
+# Node.js
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Локальные env файлы
+.env
+backend/.env
+frontend/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker (тома)
+postgres_data/
+
+# Logs
+*.log

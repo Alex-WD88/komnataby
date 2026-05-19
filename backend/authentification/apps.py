@@ -1,6 +1,11 @@
+"""
+Конфигурация приложения authentification.
+"""
+
 from django.apps import AppConfig
 
 
 class AuthentificationConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'authentification'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "authentification"
+    verbose_name = "Аутентификация и объявления"
