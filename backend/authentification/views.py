@@ -13,6 +13,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django_ratelimit.decorators import ratelimit
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework import status, generics
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import (
@@ -25,6 +26,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.pagination import PageNumberPagination
+from rest_framework import permissions
 
 from .models import Listing
 from .serializers import (
@@ -47,6 +49,7 @@ class HealthCheckView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
+    @extend_schema(responses={200: OpenApiResponse(description="HealthCheckResponse")})
     def get(self, request):
         return Response({
             "ok": True,
@@ -184,6 +187,7 @@ class LogoutView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={205: OpenApiResponse(description="LogoutSuccess"), 400: OpenApiResponse(description="Error")})
     def post(self, request):
         try:
             refresh_token = request.data.get("refresh_token")
@@ -228,6 +232,7 @@ class HomeView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: OpenApiResponse(description="HomeResponse")})
     def get(self, request):
         content = {
             "message": f"Добро пожаловать, {request.user.username}!",
@@ -256,7 +261,7 @@ class ListingPagination(PageNumberPagination):
 # Разрешение: владелец или только чтение для других
 # ==============================================================================
 
-class IsListingOwnerOrReadOnly(generics.BasePermission):
+class IsListingOwnerOrReadOnly(permissions.BasePermission):
     """
     Разрешает редактирование/удаление только создателю объявления.
     Для всех остальных — только чтение (GET, HEAD, OPTIONS).

@@ -83,7 +83,7 @@ ALLOWED_HOSTS = get_list_env("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 # По умолчанию CORS отключён (безопасный default).
 # Для локальной разработки раскомментируйте CORS_ALLOWED_ORIGINS в .env.
 CORS_ORIGIN_ALLOW_ALL = get_bool_env("DJANGO_CORS_ALLOW_ALL", False)
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = get_bool_env("DJANGO_CORS_ALLOW_CREDENTIALS", True)
 CORS_ALLOWED_ORIGINS = get_list_env(
     "DJANGO_CORS_ALLOWED_ORIGINS",
     "",  # Пусто по умолчанию — безопасный default

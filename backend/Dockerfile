@@ -40,8 +40,8 @@ WORKDIR /app
 # Копируем зависимости из builder-этапа
 COPY --from=builder /app/.venv /app/.venv
 
-# Копируем исходный код
-COPY backend/ .
+# Копируем содержимое директории backend в /app, сохраняя структуру
+COPY . /app
 
 # Создаём директории для статики и медиа
 RUN mkdir -p /app/staticfiles /app/media && chown -R appuser:appuser /app
@@ -56,5 +56,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/')" || exit 1
 
-# Запуск через gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120", "backend.wsgi:application"]
+# Запуск через gunicorn (wsgi.py находится в /app/backend/wsgi.py)
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120", "--chdir", "/app/backend", "wsgi:application"]

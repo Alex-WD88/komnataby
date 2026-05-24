@@ -47,25 +47,19 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_HOST: db
       DB_PORT: 5432
-    volumes:
-      # Hot-reload: монтируем исходный код
-      - ./backend:/app
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
-    command: >
-      sh -c "
-        python manage.py migrate &&
-        python manage.py runserver 0.0.0.0:8000
-      "
 
   # ----------------------------------------------------------------
   # Frontend (dev-server Vite)
   # ----------------------------------------------------------------
   frontend:
-    image: node:20-alpine
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
     working_dir: /app
     volumes:
       - ./frontend:/app
@@ -74,7 +68,7 @@ services:
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: http://localhost:8000/api/v1
+      VITE_API_URL: http://backend:8000/api/v1
       HOST: 0.0.0.0
     command: npm run dev -- --host
     depends_on:
